@@ -686,7 +686,7 @@ def render(out_path, limit=None, start=0.0):
     mix = os.path.join(cfg.BUILD, 'mix.wav')
     enc = subprocess.Popen([FF, '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
                             '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-', '-i', mix,
-                            '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',
+                            '-c:v', 'libx264', '-preset', 'medium', '-crf', '21',
                             '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-g', '120',
                             '-af', 'volume=3.2dB,alimiter=limit=0.93:attack=5:release=60',
                             '-c:a', 'aac', '-b:a', '256k', '-ar', '44100',

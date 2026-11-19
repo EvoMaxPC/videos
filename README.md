@@ -20,7 +20,7 @@ desde este repositorio.
 
 | Archivo | Descripción |
 |---|---|
-| `EVO_LABS_EP01_Optimizacion_Windows_1080p60.mp4` | **1920×1080 · 60 fps · 2:29** · voz rioplatense, sin animación de boca |
+| `EVO_LABS_EP01_Optimizacion_Windows_1080p60.mp4` | **1920×1080 · 60 fps · 3:02** · voz de locutor rioplatense, sin animación de boca |
 | `EVO_LABS_EP01_thumbnail.jpg` | Miniatura 1280×720 del episodio |
 | `EVO_LABS_EP01_Optimizacion_Windows_1080p60.srt` | Subtítulos sincronizados |
 
@@ -52,6 +52,9 @@ de `pipeline/audio.py`, `segments.py` y `compose.py` es el mismo para cualquier 
 
 ### Notas del episodio
 
+- **Voz v2 (locutor profesional)**: lectura con más énfasis, pausas marcadas y acento rioplatense;
+  cadena de audio de locución (presencia, compresión 3:1, saturación suave) y *ducking* más profundo
+  de la música para que la voz quede siempre al frente.
 - **Sin animación de boca**, como se pidió: el personaje se mueve por cámara, glow reactivo a la voz
   y partículas; la boca queda tal cual el arte original.
 - No se muestran porcentajes ni FPS inventados. El "999 FPS" aparece únicamente como recurso gráfico

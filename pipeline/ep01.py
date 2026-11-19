@@ -5,7 +5,7 @@ OUT_VIDEO = 'EVO_LABS_EP01_Optimizacion_Windows_1080p60.mp4'
 WORK = 'work_ep01'
 ANIM_MOUTH = False          # sin animación de boca, a pedido del canal
 
-VO_FILE = {f's{i}': f'ep_b{i}.mp3' for i in range(1, 11)}
+VO_FILE = {f's{i}': f'ep_v2_b{i}.mp3' for i in range(1, 11)}
 
 VO_TEXT = {
     's1': 'Bienvenidos a EVO Labs, Laboratorio de Software. En el capítulo de hoy nos toca hablar de optimización real de Windows y, por sobre todas las cosas, con pruebas contundentes.',
@@ -20,8 +20,8 @@ VO_TEXT = {
     's10': 'La hice larga porque, aparte de una introducción, es un descargo. Ahora sí: bienvenidos al laboratorio donde tu PC va a notar la diferencia. Voy a comenzar por lo más básico y terminar en lo más pro. Así que si te creés que te las sabés todas, adelantá el video: algo vas a encontrar. Y si no, bajate WinUtil. ¡Comenzamos de una vez!',
 }
 
-VO_DUR = {'s1': 9.59, 's2': 15.99, 's3': 7.35, 's4': 20.15, 's5': 2.55,
-          's6': 9.27, 's7': 24.31, 's8': 11.51, 's9': 13.11, 's10': 19.51}
+VO_DUR = {'s1': 11.72, 's2': 21.12, 's3': 9.48, 's4': 24.40, 's5': 4.72,
+          's6': 12.68, 's7': 29.92, 's8': 13.20, 's9': 16.68, 's10': 23.92}
 
 CHAPTERS = {
     's1': ('01', 'APERTURA'),
@@ -42,6 +42,8 @@ S = [
          cam=(1.00, 1.12, (0.50, 0.50), (0.52, 0.48)), fx='ep_boot'),
     dict(id='e1b', img=None, dur=1.9,
          cam=(1.0, 1.04, (0.5, 0.5), (0.5, 0.5)), fx='ep_logo'),
+    dict(id='e1d', img='ep_win_desktop.jpg', dur=4.2,
+         cam=(1.00, 1.12, (0.50, 0.50), (0.42, 0.52)), fx='ep_win'),
     dict(id='e1c', img='s01_char_master.jpg', dur=6.2,
          cam=(1.12, 1.00, (0.47, 0.42), (0.47, 0.45)), fx='ep_talk'),
     # 02 EL DESCARGO
@@ -51,6 +53,8 @@ S = [
          cam=(1.02, 1.14, (0.47, 0.45), (0.47, 0.44)), fx='ep_talk'),
     dict(id='e2c', img='s07_fake.jpg', dur=2.4,
          cam=(1.18, 1.06, (0.62, 0.52), (0.50, 0.46)), fx='ep_fake'),
+    dict(id='e2e', img='s01_char_master.jpg', dur=3.0,
+         cam=(1.00, 1.12, (0.48, 0.46), (0.44, 0.44)), fx='ep_talk'),
     dict(id='e2d', img='s01_char_master.jpg', dur=5.0,
          cam=(1.14, 1.02, (0.46, 0.44), (0.48, 0.42)), fx='ep_talk'),
     # 03 LA PROMESA
@@ -84,6 +88,8 @@ S = [
          cam=(1.02, 1.16, (0.44, 0.50), (0.54, 0.46)), fx='ep_win'),
     dict(id='e7d', img='s05_char_serious.jpg', dur=4.4,
          cam=(1.16, 1.02, (0.47, 0.44), (0.47, 0.46)), fx='ep_talk'),
+    dict(id='e7f', img='ep_tool_card.jpg', dur=4.0,
+         cam=(1.02, 1.14, (0.42, 0.52), (0.56, 0.46)), fx='ep_tool'),
     dict(id='e7e', img='ep_win_desktop.jpg', dur=4.4,
          cam=(1.16, 1.04, (0.58, 0.46), (0.46, 0.52)), fx='ep_services'),
     # 08 TRANSPARENCIA
@@ -96,6 +102,8 @@ S = [
          cam=(1.14, 1.02, (0.46, 0.52), (0.52, 0.46)), fx='ep_meter'),
     dict(id='e9b', img='ep_win_desktop.jpg', dur=4.4,
          cam=(1.04, 1.18, (0.50, 0.46), (0.56, 0.52)), fx='ep_unmask'),
+    dict(id='e9d', img='ep_telemetry.jpg', dur=3.2,
+         cam=(1.04, 1.16, (0.54, 0.46), (0.44, 0.52)), fx='ep_meter'),
     dict(id='e9c', img='s03_char_ringmaster.jpg', dur=4.6,
          cam=(1.02, 1.14, (0.55, 0.50), (0.48, 0.46)), fx='ep_talk'),
     # 10 COMENCEMOS
@@ -108,15 +116,15 @@ S = [
 ]
 
 SCENE_SHOTS = {
-    's1': ['e1a', 'e1b', 'e1c'],
-    's2': ['e2a', 'e2b', 'e2c', 'e2d'],
+    's1': ['e1a', 'e1b', 'e1d', 'e1c'],
+    's2': ['e2a', 'e2b', 'e2c', 'e2e', 'e2d'],
     's3': ['e3a', 'e3b'],
     's4': ['e4a', 'e4b', 'e4c', 'e4d'],
     's5': ['e5a'],
     's6': ['e6a', 'e6b'],
-    's7': ['e7a', 'e7b', 'e7c', 'e7d', 'e7e'],
+    's7': ['e7a', 'e7b', 'e7c', 'e7f', 'e7d', 'e7e'],
     's8': ['e8a', 'e8b'],
-    's9': ['e9a', 'e9b', 'e9c'],
+    's9': ['e9a', 'e9d', 'e9b', 'e9c'],
     's10': ['e10a', 'e10b', 'e10c'],
 }
 

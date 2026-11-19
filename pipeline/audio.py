@@ -167,14 +167,18 @@ def build_voice():
         i0 = int(sc['vo_start'] * SR)
         vo[i0:i0 + len(sig)] = sig[:max(0, N - i0)]
     # procesado: HP, compresión suave, leve aire
-    v = highpass(vo, int(SR / 70))
+    v = highpass(vo, int(SR / 85))
+    # presencia: refuerzo de la banda de inteligibilidad
+    v = v + 0.20 * highpass(v, max(2, int(SR / 1400)))
+    # compresión con más cuerpo (locutor)
     lvl = np.abs(v)
-    envf = boxfilt(boxfilt(lvl, int(0.010 * SR)), int(0.060 * SR))
-    thr = 0.06
-    g = np.where(envf > thr, (thr + (envf - thr) * 0.45) / np.maximum(envf, 1e-6), 1.0)
-    g = boxfilt(g, int(0.006 * SR)).astype(np.float32)
+    envf = boxfilt(boxfilt(lvl, int(0.008 * SR)), int(0.050 * SR))
+    thr = 0.045
+    g = np.where(envf > thr, (thr + (envf - thr) * 0.34) / np.maximum(envf, 1e-6), 1.0)
+    g = boxfilt(g, int(0.005 * SR)).astype(np.float32)
     v = v * g
-    v = np.tanh(v * 1.35) * 0.78
+    # saturación suave para densidad y pegada
+    v = np.tanh(v * 1.55) * 0.76
     peak = np.max(np.abs(v)) + 1e-9
     v *= 0.72 / peak
     return v
@@ -455,11 +459,11 @@ def build():
     denv = boxfilt(boxfilt(lvl, int(0.02 * SR)), int(0.12 * SR))
     denv = denv / (np.max(denv) + 1e-9)
     denv = np.clip(denv * 2.2, 0, 1)
-    duck = 1.0 - 0.62 * denv
+    duck = 1.0 - 0.66 * denv
     duck = boxfilt(duck, int(0.05 * SR)).astype(np.float32)
     music *= duck
 
-    mix = music + np.stack([vo * 0.92] * 2)
+    mix = music + np.stack([vo * 1.00] * 2)
     # fades
     nf = int(0.4 * SR)
     mix[:, :nf] *= np.linspace(0, 1, nf) ** 1.2
