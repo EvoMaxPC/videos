@@ -15,7 +15,52 @@ desde este repositorio.
 | `assets/audio/` | Líneas de voz en off (español rioplatense) |
 | `refs/` | Referencias de marca del canal (avatar, poses, banner) |
 
-## Guion y estructura (timeline real)
+
+## EP.01 — Optimización real de Windows (entrega principal)
+
+| Archivo | Descripción |
+|---|---|
+| `EVO_LABS_EP01_Optimizacion_Windows_1080p60.mp4` | **1920×1080 · 60 fps · 2:29** · voz rioplatense, sin animación de boca |
+| `EVO_LABS_EP01_thumbnail.jpg` | Miniatura 1280×720 del episodio |
+| `EVO_LABS_EP01_Optimizacion_Windows_1080p60.srt` | Subtítulos sincronizados |
+
+Guion completo del descargo, sin recortes: apertura y presentación del tema, el descargo contra los
+títulos de "999 FPS", la promesa editorial (años de pruebas), el método adaptativo por etapas,
+"acá hacemos milagros, pero los comprobamos", el anti-humo de los 8 minutos perdidos, la crítica a
+WinUtil / Chris Titus (con el reconocimiento de que sirvió en su momento), la aclaración de que todo
+se explica para que lo entiendas y puedas ejecutarlo, el "desenmascarar el verdadero potencial de
+Windows" y el cierre "COMENCEMOS DE UNA VEZ".
+
+Capítulos: 01 Apertura · 02 El descargo · 03 La promesa · 04 El método · 05 Milagros comprobados ·
+06 Sin humo · 07 WinUtil y cía. · 08 Transparencia · 09 Desenmascarar · 10 Comencemos.
+
+Motion graphics propios del episodio: terminal con comandos reales de PowerShell
+(`powercfg /list`, `Get-CimInstance Win32_StartupCommand`, `Get-Service`, `dism /analyzecomponentstore`,
+`Measure-Command`), panel de servicios reales de Windows (SysMain, WSearch, DiagTrack, Xbox Game Bar,
+Windows Update) con estado ON/OFF, medidor de telemetría en vivo, comparativa A/B ("sin cambios" vs
+"optimizado", mismo hardware), diagrama del método en 4 etapas y placa de la regla Nº1.
+
+```bash
+EVO_EP=ep01 python3 pipeline/audio.py     # música + SFX + mezcla del episodio
+EVO_EP=ep01 python3 pipeline/segments.py  # cámara y grading -> build/work_ep01/base.mp4
+EVO_EP=ep01 python3 pipeline/compose.py   # HUD, subtítulos, end card -> MP4 final
+python3 pipeline/serve.py 8000            # reproductor local con Range (adelantar/retroceder)
+```
+
+La configuración vive en `pipeline/ep01.py` (guion, tiempos, planos, cámaras y capítulos). El motor
+de `pipeline/audio.py`, `segments.py` y `compose.py` es el mismo para cualquier episodio.
+
+### Notas del episodio
+
+- **Sin animación de boca**, como se pidió: el personaje se mueve por cámara, glow reactivo a la voz
+  y partículas; la boca queda tal cual el arte original.
+- No se muestran porcentajes ni FPS inventados. El "999 FPS" aparece únicamente como recurso gráfico
+  satírico del título que se critica. Las etiquetas de rendimiento son cualitativas (A/B, PASS, EN VIVO).
+- Se respetó el tono: humor y código argentino, críticas frontales, sin volverlo corporativo.
+
+## Intro general del canal (1:37)
+
+Guion y estructura (timeline real)
 
 | # | Capítulo | In | Out | Voz en off |
 |---|---|---|---|---|

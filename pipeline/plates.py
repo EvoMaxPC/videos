@@ -84,8 +84,8 @@ def crop_to(path, box_w, box_h, out_w, out_h, zoom=1.0):
 
 def make_split_plate():
     hw = SW // 2
-    left = crop_to('s07_fake.png', 688, 768, hw, SH, 1.15)
-    right = crop_to('s07_real.png', 688, 768, hw, SH, 1.05)
+    left = crop_to('s07_fake.jpg', 688, 768, hw, SH, 1.15)
+    right = crop_to('s07_real.jpg', 688, 768, hw, SH, 1.05)
     img = Image.new('RGB', (SW, SH))
     img.paste(left, (0, 0))
     img.paste(right, (hw, 0))
@@ -101,7 +101,7 @@ def make_split_plate():
 
 
 def make_outro_plate():
-    im = Image.open(os.path.join(OUT, 's08_labwide.png')).convert('RGB')
+    im = Image.open(os.path.join(OUT, 's08_labwide.jpg')).convert('RGB')
     s = max(SW / im.size[0], SH / im.size[1])
     im = im.resize((int(im.size[0] * s) + 2, int(im.size[1] * s) + 2), Image.LANCZOS)
     x0 = (im.size[0] - SW) // 2
@@ -114,12 +114,12 @@ def make_outro_plate():
 
 if __name__ == '__main__':
     jobs = {
-        'plate_logo.png': make_logo_plate,
-        'plate_promise.png': make_promise_plate,
-        'plate_split.png': make_split_plate,
-        'plate_outro.png': make_outro_plate,
+        'plate_logo.jpg': make_logo_plate,
+        'plate_promise.jpg': make_promise_plate,
+        'plate_split.jpg': make_split_plate,
+        'plate_outro.jpg': make_outro_plate,
     }
     for name, fn in jobs.items():
         im = fn()
-        im.save(os.path.join(OUT, name))
+        im.save(os.path.join(OUT, name), quality=93, subsampling=1)
         print(name, im.size)

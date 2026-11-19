@@ -22,6 +22,10 @@ FF = get_ff()
 DIR_SCENES = os.path.join(ROOT, 'assets', 'scenes')
 DIR_AUDIO = os.path.join(ROOT, 'assets', 'audio')
 BUILD = os.path.join(ROOT, 'build', 'work')
+WORK = 'work'
+OUT_VIDEO = 'EVO_LABS_intro_1080p60.mp4'
+VO_FILE = {}
+ANIM_MOUTH = True
 
 W, H = 1920, 1080
 FPS = 60
@@ -175,7 +179,7 @@ def build_timeline():
     """Devuelve (shots con start/end absolutos, escenas con start/vo_start/vo_end, duración total)."""
     shots, scenes = [], []
     t = 0.0
-    for skey in ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8']:
+    for skey in list(SCENE_SHOTS.keys()):
         ids = SCENE_SHOTS[skey]
         dur_shots = sum(x['dur'] for x in S if x['id'] in ids)
         scene_start = t
@@ -183,13 +187,14 @@ def build_timeline():
         vo_end = vo_start + VO_DUR[skey]
         scene_len = max(dur_shots, VO_OFFSET[skey] + VO_DUR[skey] + VO_TAIL[skey])
         cur = scene_start
-        for x in S:
-            if x['id'] in ids:
-                sd = dict(x)
-                sd['start'] = cur
-                sd['end'] = cur + x['dur'] + (scene_len - dur_shots)
-                shots.append(sd)
-                cur = sd['end']
+        scene_shots = [x for x in S if x['id'] in ids]
+        for i, x in enumerate(scene_shots):
+            sd = dict(x)
+            sd['start'] = cur
+            pad = (scene_len - dur_shots) if i == len(scene_shots) - 1 else 0.0
+            sd['end'] = cur + x['dur'] + pad
+            shots.append(sd)
+            cur = sd['end']
         scenes.append(dict(key=skey, start=scene_start, end=scene_start + scene_len,
                            vo_start=vo_start, vo_end=vo_end))
         t = scene_start + scene_len
@@ -197,3 +202,22 @@ def build_timeline():
 
 
 SHOTS, SCENES, TOTAL = build_timeline()
+
+# ---------------------------------------------------------------- episodios
+_EP = os.environ.get('EVO_EP')
+if _EP:
+    import importlib
+    _m = importlib.import_module(_EP)
+    VO_TEXT = _m.VO_TEXT
+    VO_DUR = _m.VO_DUR
+    CHAPTERS = _m.CHAPTERS
+    S = _m.S
+    SCENE_SHOTS = _m.SCENE_SHOTS
+    VO_OFFSET = _m.VO_OFFSET
+    VO_TAIL = _m.VO_TAIL
+    VO_FILE = getattr(_m, 'VO_FILE', {})
+    OUT_VIDEO = getattr(_m, 'OUT_VIDEO', OUT_VIDEO)
+    WORK = getattr(_m, 'WORK', WORK)
+    ANIM_MOUTH = getattr(_m, 'ANIM_MOUTH', False)
+    BUILD = os.path.join(ROOT, 'build', WORK)
+    SHOTS, SCENES, TOTAL = build_timeline()

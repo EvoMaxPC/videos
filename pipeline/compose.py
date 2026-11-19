@@ -80,6 +80,8 @@ def ov_caption(fr, d, t):
     c = active_caption(t)
     if not c:
         return
+    if shot_at(t)[1]['fx'] in ('ep_cta', 'outro'):
+        return
     words = [O.clean(w) for w in c['words']]
     hl = 0
     for i, w in enumerate(words):
@@ -618,7 +620,7 @@ def process_frame(fr, t, e):
     sc = scene_at(t)
     z, X, Y = cam_state(sh, t)
     d = ImageDraw.Draw(fr)
-    if sh.get('mouth'):
+    if sh.get('mouth') and cfg.ANIM_MOUTH:
         apply_mouth(fr, sh, z, X, Y, e)
     if sh['fx'] not in ('logo', 'promise', 'outro', 'split'):
         ov_particles(fr, t, sh)
@@ -651,6 +653,9 @@ def process_frame(fr, t, e):
         ov_final(fr, d, t, sh)
     elif fx == 'outro':
         ov_outro(fr, d, t, sh)
+    elif fx.startswith('ep_'):
+        import ep_fx
+        ep_fx.render(fx, fr, d, t, sh, e)
     ov_chapter(fr, d, t, sc)
     ov_brand(fr, d, t)
     ov_cut(fr, d, t)
@@ -724,6 +729,6 @@ if __name__ == '__main__':
     limit = None
     if '--limit' in sys.argv:
         limit = int(sys.argv[sys.argv.index('--limit') + 1])
-    out = os.path.join(cfg.ROOT, 'EVO_LABS_intro_1080p60.mp4')
+    out = os.path.join(cfg.ROOT, cfg.OUT_VIDEO)
     render(out, limit)
-    write_srt(os.path.join(cfg.ROOT, 'EVO_LABS_intro.srt'))
+    write_srt(os.path.join(cfg.ROOT, cfg.OUT_VIDEO.replace('.mp4', '.srt')))

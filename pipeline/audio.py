@@ -158,7 +158,8 @@ def build_voice():
     vo = np.zeros(N, dtype=np.float32)
     for sc in cfg.SCENES:
         k = sc['key']
-        sig = load_audio(os.path.join(cfg.DIR_AUDIO, f'vo_{k}.mp3'))
+        fname = cfg.VO_FILE.get(k, f'vo_{k}.mp3')
+        sig = load_audio(os.path.join(cfg.DIR_AUDIO, fname))
         # pequeño fade para evitar clicks
         f = int(0.008 * SR)
         sig[:f] *= np.linspace(0, 1, f)
@@ -211,10 +212,10 @@ BAR = BEAT * 4
 def energy_at(t):
     for sc in cfg.SCENES:
         if sc['start'] <= t < sc['end']:
-            e = ENERGY[sc['key']]
+            e = ENERGY.get(sc['key'], 0.82)
             # rampa suave al inicio de escena
             k = min(1.0, (t - sc['start']) / 1.2)
-            prev = ENERGY[cfg.SCENES[max(0, cfg.SCENES.index(sc) - 1)]['key']] if cfg.SCENES.index(sc) > 0 else e
+            prev = ENERGY.get(cfg.SCENES[max(0, cfg.SCENES.index(sc) - 1)]['key'], 0.82) if cfg.SCENES.index(sc) > 0 else e
             return prev + (e - prev) * k
     return 0.4
 

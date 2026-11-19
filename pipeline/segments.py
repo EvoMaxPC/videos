@@ -7,8 +7,10 @@ FF = cfg.FF
 IW, IH = 3840, 2160
 SEGDIR = os.path.join(cfg.BUILD, 'seg')
 
-SPECIAL = {'logo': 'plate_logo.png', 'promise': 'plate_promise.png',
-           'split': 'plate_split.png', 'outro': 'plate_outro.png'}
+SPECIAL = {'logo': 'plate_logo.jpg', 'promise': 'plate_promise.jpg',
+           'split': 'plate_split.jpg', 'outro': 'plate_outro.jpg',
+           'ep_logo': 'plate_logo.jpg', 'ep_quote': 'plate_promise.jpg',
+           'ep_cta': 'plate_outro.jpg'}
 
 
 def plate_of(shot):
@@ -25,7 +27,8 @@ def build_segment(shot, force=False):
     out = os.path.join(SEGDIR, shot['id'] + '.mp4')
     if os.path.exists(out) and not force:
         return out
-    nf = max(2, int(round(shot['dur'] * cfg.FPS)))
+    seg_dur = shot.get('end', shot['start'] + shot['dur']) - shot.get('start', 0.0)
+    nf = max(2, int(round(seg_dur * cfg.FPS)))
     z0, z1, (fx0, fy0), (fx1, fy1) = shot['cam']
     e = ease_expr(nf)
     z = f"{z0}+({z1}-{z0})*{e}"
