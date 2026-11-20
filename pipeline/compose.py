@@ -498,6 +498,89 @@ def ov_particles(fr, t, sh):
 
 
 # ------------------------------------------------------------------ transiciones
+CUTS = []        # [(frame_inicio, tipo, nframes)]
+CUT_F = {}       # frame_inicio -> (tipo, nframes)
+
+
+def build_cuts():
+    """Cortes en frames reales: misma acumulación que segments.py."""
+    CUTS.clear(); CUT_F.clear()
+    cum = 0
+    for j, sh in enumerate(cfg.SHOTS):
+        dur = sh.get('end', sh['start'] + sh['dur']) - sh.get('start', 0.0)
+        nf = max(2, int(round(dur * FPS)))
+        if j > 0:
+            kind, tn = cfg.TRANSITIONS.get(sh['id'], ('dissolve', 6))
+            if kind != 'none' and tn > 0 and nf > tn + 2:
+                CUTS.append((cum, kind, int(tn)))
+                CUT_F[cum] = (kind, int(tn))
+        cum += nf
+    return CUTS
+
+
+def _punch(fr, k, amt=0.035):
+    s = 1.0 + amt * (1 - k) ** 1.5
+    if s <= 1.001:
+        return fr
+    w, h = int(W * s), int(H * s)
+    im = fr.resize((w, h), Image.BILINEAR)
+    x0, y0 = (w - W) // 2, (h - H) // 2
+    return im.crop((x0, y0, x0 + W, y0 + H))
+
+
+def _shift(fr, dx):
+    return fr.transform((W, H), Image.AFFINE, (1, 0, -dx, 0, 1, 0), resample=Image.BILINEAR)
+
+
+def _whip(fr, k, last_pre=None):
+    dz = (1 - k) ** 1.3
+    dx = dz * 0.085 * W
+    in_img = _shift(fr, dx * 0.55)
+    out_img = _shift(last_pre, -dx * 0.55) if last_pre is not None else _shift(fr, -dx * 0.55)
+    res = Image.blend(out_img, in_img, 0.18 + 0.82 * k)
+    if dx > 4:
+        res = Image.blend(res, _shift(in_img, -dx * 0.25), 0.30 * dz)
+    return res
+
+
+def _glitch(fr, k):
+    r, g, b = fr.split()
+    sh = 10 * k
+    r = r.transform((W, H), Image.AFFINE, (1, 0, -sh, 0, 1, 0), resample=Image.BILINEAR)
+    b = b.transform((W, H), Image.AFFINE, (1, 0, sh, 0, 1, 0), resample=Image.BILINEAR)
+    fr = Image.merge('RGB', (r, g, b))
+    for i in range(3):
+        yy = int((0.18 + 0.26 * i) * H + 30 * math.sin(k * 18 + i * 2))
+        hh = int(12 + 26 * abs(math.sin(k * 9 + i)))
+        yy = max(0, min(H - hh - 1, yy))
+        dx = int(70 * k * (1 if i % 2 else -1))
+        band = fr.crop((0, yy, W, yy + hh)).transform((W, hh), Image.AFFINE, (1, 0, -dx, 0, 1, 0))
+        fr.paste(band, (0, yy))
+    return fr
+
+
+def apply_transition(fr, i, last_pre):
+    for (f0, kind, nf) in CUTS:
+        if f0 <= i < f0 + nf:
+            k = (i - f0) / nf
+            if kind == 'dissolve':
+                if last_pre is not None:
+                    fr = Image.blend(last_pre, fr, 0.18 + 0.82 * k)
+            elif kind == 'flash':
+                if last_pre is not None:
+                    fr = Image.blend(last_pre, fr, 0.25 + 0.75 * k)
+                fr = _punch(fr, k, 0.030)
+                fr = Image.blend(fr, Image.new('RGB', (W, H), (255, 238, 208)), (1 - k) ** 2 * 0.34)
+            elif kind == 'whip':
+                pre = _punch(fr, 0.0, 0.16)
+                lp = _punch(last_pre, 0.0, 0.16) if last_pre is not None else None
+                fr = _whip(pre, k, lp)
+            elif kind == 'glitch':
+                fr = _glitch(fr, k)
+            return fr
+    return fr
+
+
 def ov_cut(fr, d, t):
     best = None
     for i, sh in enumerate(cfg.SHOTS):
@@ -658,7 +741,8 @@ def process_frame(fr, t, e):
         ep_fx.render(fx, fr, d, t, sh, e)
     ov_chapter(fr, d, t, sc)
     ov_brand(fr, d, t)
-    ov_cut(fr, d, t)
+    if not CUTS:
+        ov_cut(fr, d, t)
     ov_caption(fr, d, t)
     if t < 1.7:
         if t < 0.25:
@@ -674,35 +758,44 @@ def process_frame(fr, t, e):
     return fr
 
 
-def render(out_path, limit=None, start=0.0):
+def render(out_path, limit=None, start=0.0, t_to=None):
     build_captions()
     env = np.load(os.path.join(cfg.BUILD, 'env.npz'))['env']
     base = os.path.join(cfg.BUILD, 'base.mp4')
-    nframes = int(cfg.TOTAL * FPS)
+    i0 = int(start * FPS)
+    nframes = int((t_to if t_to else cfg.TOTAL) * FPS)
     if limit:
         nframes = min(nframes, limit)
     dec = subprocess.Popen([FF, '-v', 'error', '-i', base, '-f', 'rawvideo', '-pix_fmt', 'rgb24',
                             '-r', str(FPS), '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
     mix = os.path.join(cfg.BUILD, 'mix.wav')
     enc = subprocess.Popen([FF, '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24',
-                            '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-', '-i', mix,
-                            '-c:v', 'libx264', '-preset', 'medium', '-crf', '21',
+                            '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
+                            '-ss', f'{i0 / FPS:.3f}', '-i', mix,
+                            '-c:v', 'libx264', '-preset', 'medium', '-crf', '25',
                             '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-g', '120',
-                            '-af', 'volume=3.2dB,alimiter=limit=0.93:attack=5:release=60',
-                            '-c:a', 'aac', '-b:a', '256k', '-ar', '44100',
-                            '-movflags', '+faststart', '-shortest', out_path],
+                            '-af', 'volume=2.4dB,alimiter=limit=0.79:attack=1:release=80:level=false',
+                            '-c:a', 'aac', '-b:a', '256k', '-ar', '48000',
+                            '-movflags', '+faststart', '-shortest', '-t', f'{(nframes - i0) / FPS:.3f}', out_path],
                            stdin=subprocess.PIPE, bufsize=10 ** 8)
     size = W * H * 3
+    build_cuts()
+    last_pre = None
     for i in range(nframes):
         buf = dec.stdout.read(size)
         if len(buf) < size:
             break
+        if i < i0:
+            continue
         t = i / FPS
         fr = Image.frombytes('RGB', (W, H), buf)
+        if (i + 1) in CUT_F:
+            last_pre = fr.copy()
+        fr = apply_transition(fr, i, last_pre)
         e = float(env[min(i, len(env) - 1)])
         fr = process_frame(fr, t, e)
         enc.stdin.write(fr.tobytes())
-        if i % 600 == 0:
+        if (i - i0) % 600 == 0:
             print(f'  frame {i}/{nframes} t={t:.1f}s', flush=True)
     dec.stdout.close()
     dec.wait()
@@ -730,5 +823,11 @@ if __name__ == '__main__':
     if '--limit' in sys.argv:
         limit = int(sys.argv[sys.argv.index('--limit') + 1])
     out = os.path.join(cfg.ROOT, cfg.OUT_VIDEO)
-    render(out, limit)
+    t_from = float(sys.argv[sys.argv.index('--from') + 1]) if '--from' in sys.argv else 0.0
+    t_to = float(sys.argv[sys.argv.index('--to') + 1]) if '--to' in sys.argv else None
+    if '--out' in sys.argv:
+        out = sys.argv[sys.argv.index('--out') + 1]
+    render(out, limit, t_from, t_to)
+    if '--out' in sys.argv:
+        sys.exit(0)
     write_srt(os.path.join(cfg.ROOT, cfg.OUT_VIDEO.replace('.mp4', '.srt')))

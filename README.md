@@ -20,7 +20,7 @@ desde este repositorio.
 
 | Archivo | Descripción |
 |---|---|
-| `EVO_LABS_EP01_Optimizacion_Windows_1080p60.mp4` | **1920×1080 · 60 fps · 3:02** · voz de locutor rioplatense, sin animación de boca |
+| `EVO_LABS_EP01_Optimizacion_Windows_1080p60.mp4` | **1920×1080 · 60 fps · 3:02** · voz de locutor rioplatense, sin animación de boca, montaje rítmico con transiciones |
 | `EVO_LABS_EP01_thumbnail.jpg` | Miniatura 1280×720 del episodio |
 | `EVO_LABS_EP01_Optimizacion_Windows_1080p60.srt` | Subtítulos sincronizados |
 
@@ -39,6 +39,22 @@ Motion graphics propios del episodio: terminal con comandos reales de PowerShell
 `Measure-Command`), panel de servicios reales de Windows (SysMain, WSearch, DiagTrack, Xbox Game Bar,
 Windows Update) con estado ON/OFF, medidor de telemetría en vivo, comparativa A/B ("sin cambios" vs
 "optimizado", mismo hardware), diagrama del método en 4 etapas y placa de la regla Nº1.
+
+### Edición (v3)
+
+- **Montaje al ritmo de la voz y de la música**: cada corte interno se ajusta al límite de palabra
+  más cercano (±0,42 s) y después a la grilla de corcheas a 96 BPM (`BEAT8 = 0,3125 s`, ±0,12 s),
+  conservando la duración exacta de la escena. Ningún plano queda por debajo de 1 s.
+- **Transiciones reales entre planos** (no cortes secos sueltos), definidas por plano en
+  `TRANSITIONS`: `dissolve` (fundido con arrastre del plano anterior), `flash` (destello cálido con
+  punch-in), `whip` (barrido horizontal con desenfoque y pre-zoom) y `glitch` (separación RGB y
+  bandas desplazadas). Los cortes se calculan **en frames reales**, con la misma acumulación que
+  `segments.py`, para que cada transición caiga exactamente sobre el cambio de plano.
+- **Audio pegado al corte**: un whoosh por cada corte (con timbre y paneo según el tipo de
+  transición), impacto + riser en cada cambio de escena, y acentos por tipo de plano (chip de la
+  regla Nº1, panel de servicios, terminal, medidor de telemetría, cierre).
+- **Mezcla final normalizada**: −13,1 LUFS integrados y true peak −0,6 dBTP (limitador con
+  `level=false` para no reamplificar), audio AAC 256 kb/s a 48 kHz.
 
 ```bash
 EVO_EP=ep01 python3 pipeline/audio.py     # música + SFX + mezcla del episodio

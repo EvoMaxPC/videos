@@ -207,6 +207,7 @@ CHORDS = [  # (root, [notes])
 
 ENERGY = {'s1': 0.42, 's2': 0.85, 's3': 1.0, 's4': 0.9,
           's5': 0.28, 's6': 0.8, 's7': 0.95, 's8': 1.0}
+ENERGY.update(getattr(cfg, 'EP_ENERGY', {}) or {})
 
 BPM = 96.0
 BEAT = 60.0 / BPM
@@ -395,34 +396,61 @@ def sfx_power(dur=3.0):
 
 def build_sfx():
     fx = np.zeros((2, N), np.float32)
-    shot_edges = [s['start'] for s in cfg.SHOTS if s['start'] > 0.1]
-    for j, ts in enumerate(shot_edges):
-        add(fx, sfx_whoosh(0.55, 0.8 + 0.5 * (j % 3)), ts - 0.28, 0.16, pan=0.4 if j % 2 else -0.4)
-    # encendido
-    add(fx, sfx_power(5.4), 0.15, 0.20)
-    for k in range(int(4.6 / 0.11)):
+    trans = getattr(cfg, 'TRANSITIONS', {}) or {}
+
+    # transiciones: un whoosh por corte, con carácter según el tipo
+    for j, sh in enumerate(cfg.SHOTS):
+        if sh['start'] <= 0.05:
+            continue
+        kind, nf = trans.get(sh['id'], ('dissolve', 6))
+        pan = 0.45 if j % 2 else -0.45
+        if kind == 'whip':
+            add(fx, sfx_whoosh(0.45, 1.5), sh['start'] - 0.16, 0.20, pan=pan)
+            add(fx, sfx_blip(320, 0.06), sh['start'] - 0.02, 0.05, pan=-pan)
+        elif kind == 'flash':
+            add(fx, sfx_whoosh(0.30, 1.1), sh['start'] - 0.12, 0.13, pan=pan)
+            add(fx, sfx_impact(1.2, 0.5), sh['start'] - 0.01, 0.16)
+        elif kind == 'glitch':
+            add(fx, sfx_glitch(0.28), sh['start'] - 0.04, 0.11, pan=pan)
+            add(fx, sfx_whoosh(0.32, 0.9), sh['start'] - 0.10, 0.09, pan=pan)
+        else:
+            add(fx, sfx_whoosh(0.55, 1.0), sh['start'] - 0.22, 0.13, pan=pan)
+
+    # escenas: impacto + riser previo
+    for j, sc in enumerate(cfg.SCENES[1:], start=1):
+        add(fx, sfx_impact(2.2, 0.85), max(0.0, sc['start'] - 0.02), 0.26 + 0.03 * (j % 4))
+        add(fx, sfx_riser(2.0 + 0.15 * (j % 3)), max(0.0, sc['start'] - 2.2), 0.15)
+
+    # apertura: encendido y tipeo
+    first_vo = cfg.SCENES[0]['vo_start']
+    add(fx, sfx_power(min(5.4, first_vo)), 0.15, 0.20)
+    for k in range(int(min(4.6, first_vo) / 0.11)):
         add(fx, sfx_type(0.04), 0.9 + k * 0.11 + rng.uniform(-0.02, 0.02),
             0.05 + 0.03 * rng.random(), pan=rng.uniform(-0.6, 0.6))
-    # impactos de logo / escenas
-    add(fx, sfx_impact(2.6, 0.9), 5.62, 0.62)
-    add(fx, sfx_riser(2.0), 5.0, 0.24, pan=0.1)
-    for key, g in [('s2', 0.34), ('s3', 0.46), ('s6', 0.40), ('s8', 0.62)]:
-        sc = next(s for s in cfg.SCENES if s['key'] == key)
-        add(fx, sfx_impact(2.4), max(0, sc['start'] - 0.02), g)
-        add(fx, sfx_riser(2.4), max(0, sc['start'] - 2.4), 0.20)
-    # ring: blips de competencia
-    for k in range(10):
-        add(fx, sfx_blip(900 + 260 * (k % 4), 0.07), 25.2 + k * 0.31, 0.055, pan=-0.5 + k * 0.1)
-    # promesa: chime + impacto suave
-    add(fx, sfx_impact(2.0, 0.6), 49.12, 0.30)
-    add(fx, sfx_chime(2.0), 49.3, 0.16, pan=0.1)
-    # comparativa: glitch + buzz (falso) y chime (real)
-    add(fx, sfx_glitch(0.45), 72.32, 0.16, pan=-0.3)
-    add(fx, sfx_buzz(0.55), 72.75, 0.14, pan=-0.2)
-    add(fx, sfx_chime(1.8), 74.95, 0.16, pan=0.2)
-    # final
-    add(fx, sfx_impact(3.0, 1.0), 90.52, 0.42)
-    add(fx, sfx_riser(2.2), 88.4, 0.14)
+
+    # acentos por tipo de plano
+    for sh in cfg.SHOTS:
+        if sh['fx'] == 'ep_quote':
+            add(fx, sfx_impact(2.0, 0.6), sh['start'], 0.30)
+            add(fx, sfx_chime(2.0), sh['start'] + 0.2, 0.15, pan=0.1)
+        elif sh['fx'] == 'ep_fake':
+            add(fx, sfx_buzz(0.5), sh['start'] + 0.25, 0.11, pan=-0.2)
+        elif sh['fx'] == 'ep_services':
+            for k in range(5):
+                add(fx, sfx_blip(700 + 120 * k, 0.05), sh['start'] + 0.25 + k * 0.16, 0.035,
+                    pan=-0.4 + 0.2 * k)
+        elif sh['fx'] == 'ep_term':
+            for k in range(int(3.2 / 0.18)):
+                add(fx, sfx_type(0.03), sh['start'] + 0.3 + k * 0.18,
+                    0.03 + 0.02 * rng.random(), pan=0.3)
+        elif sh['fx'] == 'ep_meter':
+            add(fx, sfx_blip(1180, 0.05), sh['start'] + 0.15, 0.03, pan=0.4)
+        elif sh['fx'] == 'ep_unmask':
+            add(fx, sfx_glitch(0.4), sh['start'] + 0.1, 0.13, pan=0.2)
+        elif sh['fx'] == 'ep_cta':
+            add(fx, sfx_impact(3.0, 1.0), sh['start'], 0.38)
+            add(fx, sfx_chime(2.4), sh['start'] + 0.35, 0.18, pan=-0.1)
+
     return fx
 
 

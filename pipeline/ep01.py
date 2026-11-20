@@ -4,6 +4,26 @@ import os
 OUT_VIDEO = 'EVO_LABS_EP01_Optimizacion_Windows_1080p60.mp4'
 WORK = 'work_ep01'
 ANIM_MOUTH = False          # sin animación de boca, a pedido del canal
+PACING = True               # cortes pegados a la voz y al pulso
+
+ENERGY = {'s1': 0.52, 's2': 0.86, 's3': 0.9, 's4': 0.84, 's5': 0.3,
+          's6': 0.8, 's7': 0.95, 's8': 0.8, 's9': 0.96, 's10': 1.0}
+
+# tipo de transición al ENTRAR a cada plano (kind, frames a 60fps)
+TRANSITIONS = {
+    'e1b': ('flash', 4), 'e1d': ('whip', 5), 'e1c': ('dissolve', 8),
+    'e2a': ('glitch', 6), 'e2b': ('flash', 3), 'e2c': ('glitch', 4),
+    'e2e': ('whip', 4), 'e2d': ('dissolve', 6),
+    'e3a': ('dissolve', 8), 'e3b': ('flash', 3),
+    'e4a': ('dissolve', 8), 'e4b': ('whip', 4), 'e4c': ('dissolve', 6), 'e4d': ('whip', 4),
+    'e5a': ('flash', 5),
+    'e6a': ('dissolve', 8), 'e6b': ('whip', 4),
+    'e7a': ('dissolve', 8), 'e7b': ('whip', 4), 'e7c': ('flash', 3),
+    'e7f': ('whip', 4), 'e7d': ('dissolve', 6), 'e7e': ('whip', 4),
+    'e8a': ('dissolve', 8), 'e8b': ('whip', 4),
+    'e9a': ('dissolve', 8), 'e9d': ('whip', 4), 'e9b': ('glitch', 6), 'e9c': ('flash', 4),
+    'e10a': ('dissolve', 8), 'e10b': ('whip', 5), 'e10c': ('dissolve', 10),
+}
 
 VO_FILE = {f's{i}': f'ep_v2_b{i}.mp3' for i in range(1, 11)}
 

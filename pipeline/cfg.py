@@ -26,6 +26,9 @@ WORK = 'work'
 OUT_VIDEO = 'EVO_LABS_intro_1080p60.mp4'
 VO_FILE = {}
 ANIM_MOUTH = True
+PACING = False
+TRANSITIONS = {}
+EP_ENERGY = {}
 
 W, H = 1920, 1080
 FPS = 60
@@ -175,6 +178,58 @@ VO_TAIL = {'s1': 0.50, 's2': 0.50, 's3': 0.50, 's4': 0.50,
            's5': 0.30, 's6': 0.50, 's7': 0.50, 's8': 2.50}
 
 
+def _syllable_weight(word):
+    vowels = 'aeiouáéíóúü'
+    n = sum(1 for ch in word.lower() if ch in vowels)
+    return max(1.6, n * 1.0 + len(word) * 0.32)
+
+
+def _word_bounds(text, start, dur):
+    words = text.split()
+    wts = [_syllable_weight(w) for w in words]
+    tot = sum(wts)
+    out, t = [], start
+    for w, wt in zip(words, wts):
+        d = dur * wt / tot
+        out.append((t, t + d))
+        t += d
+    return out
+
+
+BEAT8 = 60.0 / 96.0 / 2   # corchea a 96 BPM = 0.3125 s
+
+
+def _paced_cuts(ids, scene_start, vo_start, vo_key):
+    """Ajusta los cortes internos a pausas de la voz y al pulso musical."""
+    base = [(x['id'], x['dur']) for x in S if x['id'] in ids]
+    durs = [d for _, d in base]
+    if not PACING or len(durs) < 2:
+        return durs
+    bounds = []
+    for (w0, w1) in _word_bounds(VO_TEXT[vo_key], vo_start, VO_DUR[vo_key]):
+        bounds += [w0, w1]
+    cum = [scene_start]
+    for d in durs:
+        cum.append(cum[-1] + d)
+    new = [cum[0]]
+    for i in range(1, len(cum) - 1):
+        tc = cum[i]
+        cand = min(bounds, key=lambda b: abs(b - tc)) if bounds else tc
+        if abs(cand - tc) <= 0.42:
+            tc = cand
+        grid = round(tc / BEAT8) * BEAT8
+        if abs(grid - tc) <= 0.12:
+            tc = grid
+        tc = max(new[-1] + 1.1, min(tc, cum[i + 1] - 1.1))
+        new.append(tc)
+    new.append(cum[-1])
+    out = [round(new[i + 1] - new[i], 4) for i in range(len(new) - 1)]
+    # conservar exactamente la duración de la escena
+    delta = round(sum(durs) - sum(out), 4)
+    out[-1] = round(out[-1] + delta, 4)
+    return out
+
+
 def build_timeline():
     """Devuelve (shots con start/end absolutos, escenas con start/vo_start/vo_end, duración total)."""
     shots, scenes = [], []
@@ -188,11 +243,13 @@ def build_timeline():
         scene_len = max(dur_shots, VO_OFFSET[skey] + VO_DUR[skey] + VO_TAIL[skey])
         cur = scene_start
         scene_shots = [x for x in S if x['id'] in ids]
+        durs = _paced_cuts(ids, scene_start, vo_start, skey)
         for i, x in enumerate(scene_shots):
             sd = dict(x)
+            sd['dur'] = durs[i] if i < len(durs) else x['dur']
             sd['start'] = cur
             pad = (scene_len - dur_shots) if i == len(scene_shots) - 1 else 0.0
-            sd['end'] = cur + x['dur'] + pad
+            sd['end'] = cur + sd['dur'] + pad
             shots.append(sd)
             cur = sd['end']
         scenes.append(dict(key=skey, start=scene_start, end=scene_start + scene_len,
@@ -219,5 +276,8 @@ if _EP:
     OUT_VIDEO = getattr(_m, 'OUT_VIDEO', OUT_VIDEO)
     WORK = getattr(_m, 'WORK', WORK)
     ANIM_MOUTH = getattr(_m, 'ANIM_MOUTH', False)
+    PACING = getattr(_m, 'PACING', False)
+    TRANSITIONS = getattr(_m, 'TRANSITIONS', {})
+    EP_ENERGY = getattr(_m, 'ENERGY', {})
     BUILD = os.path.join(ROOT, 'build', WORK)
     SHOTS, SCENES, TOTAL = build_timeline()
