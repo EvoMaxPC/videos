@@ -26,12 +26,12 @@ PAGE = """<!doctype html>
   code{background:#111826;padding:2px 7px;border-radius:6px;color:#7FE3F0}
 </style></head><body><div class="wrap">
 <h1>EVO LABS <span>|</span> Laboratorio de Software</h1>
-<p class="sub">EP.01 — Optimización real de Windows · 1920×1080 · 60 fps · 2:29</p>
+<p class="sub">EP.01 — Optimización real de Windows · 1920×1080 · 60 fps · 3:02</p>
 <video src="/ep01.mp4" controls autoplay preload="metadata" playsinline></video>
 <div class="bar">
   <a class="btn" href="/ep01.mp4" download>Descargar EP.01</a>
   <a class="btn ghost" href="/subtitles-ep01.srt">Subtítulos .srt</a>
-  <span>Sin animación de boca · voz rioplatense · música y SFX originales · subtítulos con palabras clave en <code>amarillo EVO</code></span>
+  <span>Sin animación de boca · voz de locutor · montaje al ritmo de la voz · transiciones (dissolve / flash / whip / glitch) · SFX en cada corte · subtítulos con palabras clave en <code>amarillo EVO</code></span>
 </div>
 <h1 style="margin-top:44px;font-size:22px">Intro general del canal <span>·</span> 1:37</h1>
 <video src="/video.mp4" poster="/thumb.jpg" controls preload="none" playsinline style="margin-top:8px"></video>
